@@ -1,7 +1,7 @@
 """Функціонал для консольного бота помічника(2.0), який розпізнає команди, що вводяться з клавіатури,
                                     та відповідає відповідно до введеної команди."""
 from collections import UserDict
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 from typing import Iterable
 
 
@@ -21,14 +21,13 @@ class BirthdayNotFoundError(Exception):
 
 
 class ValidationError(Exception):
-    def __init__(self):
-        super().__init__('The phone must have 10 numbers.')
+    pass
 
 
 class Field:
     """Базовий клас для полів запису."""
 
-    def __init__(self, value: str | date):
+    def __init__(self, value: str | datetime):
         self.value = value
 
     def __str__(self):
@@ -47,7 +46,7 @@ class Phone(Field):
         if value.isdigit() and len(value) == 10:
             super().__init__(value)
         else:
-            raise ValidationError
+            raise ValidationError('The phone must have 10 numbers.')
 
 
 class Birthday(Field):
@@ -55,10 +54,24 @@ class Birthday(Field):
 
     def __init__(self, value: str):
         try:
-            birthday_date = datetime.strptime(value, '%d.%m.%Y').date()
-            super().__init__(birthday_date)
+            birthday = datetime.strptime(value, '%d.%m.%Y')
+            super().__init__(self.__validation(birthday))
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
+
+    @staticmethod
+    def __validation(birthday: datetime) -> datetime:
+        """
+        Виконую валідацію вхідної дати.
+
+        :param birthday: Бажана дата.
+        :return: Вхідну дату якщо вона пройшла провірку.
+        """
+        now = datetime.now()
+        if birthday.date() <= now.date():
+            return birthday
+        else:
+            raise ValidationError('Incorrect date.')
 
     def __str__(self):
         return self.value.strftime('%d.%m.%Y')
@@ -134,12 +147,16 @@ class AddressBook(UserDict):
 
         :return: Список словників з датами привітання.
         """
-        now = datetime.now().date()
+        now = datetime.now()
         res = []
         for rec in self.data.values():
             if rec.birthday is None:
                 continue
-            birthday = rec.birthday.value
+
+            birthday = rec.birthday.value.replace(year=now.year)
+            if birthday.date() < now.date():
+                birthday = birthday.replace(year=now.year + 1)
+
             if 0 <= birthday.toordinal() - now.toordinal() <= 7:
                 weekday = birthday.weekday()
                 if weekday == 5 or weekday == 6:
