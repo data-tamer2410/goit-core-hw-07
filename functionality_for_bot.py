@@ -4,11 +4,6 @@ from collections import UserDict
 from datetime import datetime, timedelta
 
 
-class ContactNotFoundError(Exception):
-    def __init__(self):
-        super().__init__('Contact not found.')
-
-
 class ValidationError(Exception):
     pass
 
