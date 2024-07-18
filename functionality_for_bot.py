@@ -140,7 +140,6 @@ class Record:
 class AddressBook(UserDict):
     """Клас для зберігання та управління записами."""
 
-    @property
     def get_upcoming_birthdays(self) -> list[dict]:
         """
         Визначає контакти, у яких день народження припадає вперед на 7 днів включаючи поточний день.

@@ -210,7 +210,7 @@ def birthdays(book: AddressBook) -> str:
     else:
         res = ''
         count_rec = 1
-        for d in book.get_upcoming_birthdays:
+        for d in book.get_upcoming_birthdays():
             res += f'{count_rec}. Contact name: {d['name']}, birthday: {d['birthday']};\n'
             count_rec += 1
         return res
