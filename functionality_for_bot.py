@@ -2,22 +2,11 @@
                                     та відповідає відповідно до введеної команди."""
 from collections import UserDict
 from datetime import datetime, timedelta
-from typing import Iterable
-
-
-class PhoneNotFoundError(Exception):
-    def __init__(self):
-        super().__init__('Phone not found.')
 
 
 class ContactNotFoundError(Exception):
     def __init__(self):
         super().__init__('Contact not found.')
-
-
-class BirthdayNotFoundError(Exception):
-    def __init__(self):
-        super().__init__('Birthday not found.')
 
 
 class ValidationError(Exception):
@@ -80,9 +69,9 @@ class Birthday(Field):
 class Record:
     """Клас для зберігання інформації про контакт, включаючи ім'я, список телефонів та дату народження."""
 
-    def __init__(self, name: str, phones: Iterable):
+    def __init__(self, name: str, phone: str = None):
         self.name = Name(name)
-        self.phones = [Phone(phone) for phone in phones]
+        self.phones = Phone(phone) if phone else []
         self.birthday = None
 
     def add_birthday(self, birthday: str):

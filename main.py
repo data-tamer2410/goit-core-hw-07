@@ -1,8 +1,7 @@
 """Консольний бот помічник(2.0), який розпізнає команди, що вводяться з клавіатури,
                                     та відповідає відповідно до введеної команди."""
 
-from functionality_for_bot import AddressBook, Record, ContactNotFoundError, ValidationError, BirthdayNotFoundError, \
-    PhoneNotFoundError
+from functionality_for_bot import AddressBook, Record, ContactNotFoundError, ValidationError
 
 
 def input_error(func):
@@ -11,19 +10,17 @@ def input_error(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except PhoneNotFoundError as ex:
-            return ex
         except ContactNotFoundError as ex:
+            return ex
+        except ValidationError as ex:
             return ex
         except ValueError as ex:
             if str(ex).startswith('Invalid date'):
                 return ex
+            elif str(ex)[1:11].isdigit():
+                return str(ex) + '.'
             else:
                 return 'Enter the argument for the command.'
-        except BirthdayNotFoundError as ex:
-            return ex
-        except ValidationError as ex:
-            return ex
 
     return inner
 
@@ -36,12 +33,9 @@ def parse_input(user_input: str) -> tuple[str, str] | str:
     :param user_input:
     :return: Кортеж з обробленим веденням користувача.
     """
-    try:
-        cmd, *args = user_input.split()
-        cmd = cmd.strip().lower()
-        return cmd, *args
-    except ValueError:
-        return 'Error'
+    cmd, *args = user_input.split()
+    cmd = cmd.strip().lower()
+    return cmd, *args
 
 
 @input_error
@@ -53,16 +47,17 @@ def add_contact(args: list[str], book: AddressBook) -> str:
     :param book: Бажана записна книга.
     :return: Рядок логування для користувача.
     """
-    name, *phones = args
+
+    name, phone = args[:2] if len(args[:2]) == 2 else (args[0], None)
     record = book.find(name)
+    msg = 'Contact update.'
     if record is None:
-        book.add_record(Record(name, set(phones)))
-        return 'Contact added.'
-    else:
-        for phone in phones:
-            if record.find_phone(phone) is None:
-                record.add_phone(phone)
-        return 'Contact updated.'
+        record = Record(name)
+        book.add_record(record)
+        msg = 'Contact added.'
+    if phone and record.find_phone(phone) is None:
+        record.add_phone(phone)
+    return msg
 
 
 @input_error
@@ -78,15 +73,11 @@ def change_contact(args: list[str], book: AddressBook) -> str:
     record = book.find(name)
     if record is None:
         raise ContactNotFoundError
-    elif record.find_phone(old_phone) is None:
-        raise PhoneNotFoundError
+    if record.find_phone(new_phone) is None or old_phone == new_phone:
+        record.edit_phone(old_phone, new_phone)
     else:
-        if record.find_phone(new_phone) is None:
-            record.edit_phone(old_phone, new_phone)
-        else:
-            if old_phone != new_phone:
-                record.remove_phone(old_phone)
-        return f'Contact changed.'
+        record.remove_phone(old_phone)
+    return 'Contact changed.'
 
 
 @input_error
@@ -102,11 +93,8 @@ def remove_phone(args: list[str], book: AddressBook) -> str:
     record = book.find(name)
     if record is None:
         raise ContactNotFoundError
-    elif record.find_phone(phone) is None:
-        raise PhoneNotFoundError
-    else:
-        record.remove_phone(phone)
-        return 'Phones remove.'
+    record.remove_phone(phone)
+    return 'Phone remove.'
 
 
 @input_error
@@ -121,9 +109,8 @@ def delete_contact(args: list[str], book: AddressBook) -> str:
     name, *_ = args
     if book.find(name) is None:
         raise ContactNotFoundError
-    else:
-        book.delete(name)
-        return 'Contact delete.'
+    book.delete(name)
+    return 'Contact delete.'
 
 
 @input_error
@@ -139,8 +126,7 @@ def show_phone(args: list[str], book: AddressBook) -> str:
     record = book.find(name)
     if record is None:
         raise ContactNotFoundError
-    else:
-        return f'Phones: {'; '.join(str(p) for p in record.phones)}'
+    return f'Phones: {'; '.join(str(p) for p in record.phones)}'
 
 
 @input_error
@@ -153,8 +139,7 @@ def show_all_contacts(book: AddressBook) -> AddressBook:
     """
     if not book:
         raise ContactNotFoundError
-    else:
-        return book
+    return book
 
 
 @input_error
@@ -168,14 +153,13 @@ def add_birthday(args: list[str], book: AddressBook) -> str:
     """
     name, birthday, *_ = args
     record = book.find(name)
+    msg = 'Birthday update.'
     if record is None:
         raise ContactNotFoundError
-    elif record.birthday is not None:
-        record.add_birthday(birthday)
-        return 'Birthday updated'
-    else:
-        record.add_birthday(birthday)
-        return 'Birthday added.'
+    if record.birthday is None:
+        msg = 'Birthday added.'
+    record.add_birthday(birthday)
+    return msg
 
 
 @input_error
@@ -191,10 +175,7 @@ def show_birthday(args: list[str], book: AddressBook) -> str:
     record = book.find(name)
     if record is None:
         raise ContactNotFoundError
-    elif record.birthday is None:
-        raise BirthdayNotFoundError
-    else:
-        return f'Birthday: {str(record.birthday)}'
+    return f'Birthday: {str(record.birthday)}'
 
 
 @input_error
@@ -207,13 +188,12 @@ def birthdays(book: AddressBook) -> str:
     """
     if not book:
         raise ContactNotFoundError
-    else:
-        res = ''
-        count_rec = 1
-        for d in book.get_upcoming_birthdays():
-            res += f'{count_rec}. Contact name: {d['name']}, birthday: {d['birthday']};\n'
-            count_rec += 1
-        return res
+    res = ''
+    count_rec = 1
+    for d in book.get_upcoming_birthdays():
+        res += f'{count_rec}. Contact name: {d['name']}, birthday: {d['birthday']};\n'
+        count_rec += 1
+    return res
 
 
 def main():
