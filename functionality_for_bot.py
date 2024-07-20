@@ -66,7 +66,7 @@ class Record:
 
     def __init__(self, name: str, phone: str = None):
         self.name = Name(name)
-        self.phones = Phone(phone) if phone else []
+        self.phones = [Phone(phone)] if phone else []
         self.birthday = None
 
     def add_birthday(self, birthday: str):

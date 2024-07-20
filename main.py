@@ -12,7 +12,7 @@ def input_error(func):
             return func(*args, **kwargs)
         except ValidationError as ex:
             return ex
-        except ValueError as ex:
+        except (ValueError, IndexError) as ex:
             if str(ex)[1:11].isdigit() or str(ex).startswith('Invalid date'):
                 return str(ex) + '.'
             else:
@@ -53,7 +53,7 @@ def add_contact(args: list[str], book: AddressBook) -> str:
         record = Record(name)
         book.add_record(record)
         msg = 'Contact added.'
-    if phone and record.find_phone(phone) is None:
+    if phone:
         record.add_phone(phone)
     return msg
 
@@ -69,10 +69,7 @@ def change_contact(args: list[str], book: AddressBook) -> str:
     """
     name, old_phone, new_phone, *_ = args
     record = book.find(name)
-    if record.find_phone(new_phone) is None or old_phone == new_phone:
-        record.edit_phone(old_phone, new_phone)
-    else:
-        record.remove_phone(old_phone)
+    record.edit_phone(old_phone, new_phone)
     return 'Contact changed.'
 
 
