@@ -83,7 +83,8 @@ class Record:
 
         :param phone: Бажаний номер телефону.
         """
-        self.phones.append(Phone(phone))
+        if self.find_phone(phone) is None:
+            self.phones.append(Phone(phone))
 
     def remove_phone(self, phone: str):
         """
@@ -102,7 +103,10 @@ class Record:
         :param new_phone: Новий номер телефону.
         """
         i = [v.value for v in self.phones].index(Phone(old_phone).value)
-        self.phones[i] = Phone(new_phone)
+        if self.find_phone(new_phone) and old_phone != new_phone:
+            self.remove_phone(old_phone)
+        else:
+            self.phones[i] = Phone(new_phone)
 
     def find_phone(self, phone: str) -> Phone | None:
         """
