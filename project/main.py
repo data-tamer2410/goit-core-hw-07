@@ -1,7 +1,7 @@
 """Консольний бот помічник(2.0), який розпізнає команди, що вводяться з клавіатури,
                                     та відповідає відповідно до введеної команди."""
 
-from functionality_for_bot import AddressBook, Record, ValidationError
+from project.functionality_for_bot import AddressBook, Record, ValidationError
 
 
 def input_error(func):
