@@ -2,7 +2,7 @@
 name = "goit-core-hw-07"
 version = "0.1.0"
 description = ""
-authors = ["Vitaliy-datascientist <vitaliy.dayneko2410@gmail.com>"]
+authors = ["data-tamer2410 <vitaliy.dayneko2410@gmail.com>"]
 packages = [{'include' = 'project'}]
 
 [tool.poetry.dependencies]
